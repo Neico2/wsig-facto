@@ -173,6 +173,8 @@ public class FacAgent extends Agent {
 							//Integer result = new Integer( rep.getContent().toString() );
 		
 							sendNotification(actExpr, msg, ACLMessage.INFORM, rep.getContent());
+
+							etat = 0;
 						}
 						break;
 					}

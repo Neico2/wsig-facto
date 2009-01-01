@@ -2,6 +2,7 @@ package com.tilab.wsig.examples;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 
@@ -19,21 +20,21 @@ public class FactorialorAgent extends Agent {
 	private static final long serialVersionUID = 1698307428587801713L;
 
 	// The list of known multiplicator agents
-	private AID[] multiplicatorAgents = {new AID("MultiplicatorAgent1", AID.ISLOCALNAME), new AID("MultiplicatorAgent1", AID.ISLOCALNAME)};
+	private AID[] multiplicatorAgents = {new AID("MultiplicatorAgent1", AID.ISLOCALNAME), new AID("MultiplicatorAgent2", AID.ISLOCALNAME)};
 
 	protected void setup() {
 		System.out.println("Starting "+getLocalName()+"...");
 
 		Object[] args = getArguments();
-		if (args != null && args.length > 0) {
+		//if (args != null && args.length > 0) {
 			// Add the behaviour proceeding to the calculating task by giving work to multiplicator agents
 			addBehaviour( new RequestPerformer() );
-		}
-		else {
+		//}
+		/*else {
 			// Make the agent terminate
 			System.out.println("No number specified");
 			doDelete();
-		}
+		}*/
 	}
 
 	protected void takeDown() {
@@ -48,29 +49,34 @@ public class FactorialorAgent extends Agent {
 	 * @author seb
 	 *
 	 */
-	private class RequestPerformer extends Behaviour {
+	private class RequestPerformer extends CyclicBehaviour {
 
 		private MessageTemplate mt; // The template to receive replies
 		private int mulStack = 0; // The counter of replies from multiplicator agents
 		private int step = 0;
-		private ConcurrentLinkedQueue<Double> tokens = new ConcurrentLinkedQueue<Double>(); // temp results
-		private ConcurrentLinkedQueue<String> transIds = new ConcurrentLinkedQueue<String>(); // transactions id (avoid duplication in broadcasting mode) 
+		private ConcurrentLinkedQueue<Double> tokens;//; = new ConcurrentLinkedQueue<Double>(); // temp results
+		private ConcurrentLinkedQueue<String> transIds;//; new ConcurrentLinkedQueue<Double>(); // transactions id (avoid duplication in broadcasting mode) 
 		private final boolean broadcastMode = true; // used by delegateWork() to broadcast requests or not
 		private AID sender;
 		
 		
+		@SuppressWarnings("deprecation")
 		@Override
 		public void action() {
 			switch (step) {
 			case 0:
+				tokens = new ConcurrentLinkedQueue<Double>();
+				transIds = new ConcurrentLinkedQueue<String>();
 				// Send the initial requests to the multiplicator agents
 				//Object args[] = myAgent.getArguments();
 				//if(args != null) {
-				ACLMessage msg = receive();
+				MessageTemplate mt2 = MessageTemplate.MatchPerformative(ACLMessage.REQUEST);
+				ACLMessage msg = receive(mt2);
 				if(msg != null){
 					sender = msg.getSender();
+					System.out.println("msg.getContent()"+msg.getContent().toString());
 					Integer arg0 = new Integer( msg.getContent().toString() );
-					System.out.println("Calculating "+arg0+"!");
+					System.out.println("Calculating "+msg.getContent().toString()+"!");
 	
 					// Initialize
 					mulStack = 0;
@@ -126,7 +132,8 @@ public class FactorialorAgent extends Agent {
 					rep.setContent(result);
 					send(rep);
 				}
-				myAgent.doDelete();
+				step = 0;
+				//myAgent.doDelete();
 				break;
 			}
 
@@ -225,10 +232,11 @@ public class FactorialorAgent extends Agent {
 			return false;
 		}
 
-		@Override
+		/*@Override
 		public boolean done() {
 			return false;
 		}
+		*/
 
 	}
 
